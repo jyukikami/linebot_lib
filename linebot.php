@@ -18,6 +18,7 @@ use \LINE\LINEBot\Event\MessageEvent;
 use \LINE\LINEBot\Event\PostbackEvent;
 use \LINE\LINEBot\Event\MessageEvent\TextMessage;
 use \LINE\LINEBot\Event\MessageEvent\StickerMessage;
+use \LINE\LINEBot\Event\MessageEvent\LocationMessage;
 use \LINE\LINEBot\TemplateActionBuilder\MessageTemplateActionBuilder;
 use \LINE\LINEBot\TemplateActionBuilder\PostbackTemplateActionBuilder;
 use \LINE\LINEBot\TemplateActionBuilder\UriTemplateActionBuilder;
@@ -175,7 +176,7 @@ class LineBotClass extends LINEBot
 				$location['longitude'] = $event->getLongitude();
 				return $location;
 			}else{
-				$this->set_error("スタンプメッセージではありません");
+				$this->set_error("位置情報ではありません");
 				return false;
 			}
 		}

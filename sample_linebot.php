@@ -54,6 +54,18 @@ try {
 		$bot->add_text_builder($id_text);
 	}
 
+	// 位置情報なら
+	if ($messeage_type == "location") {
+		// 位置情報のデータを取得
+		$locaation = $bot->get_location();
+		$locaation_test = "";
+		foreach ($locaation as $key => $value) {
+			$locaation_test .= $key . ":" . $value . "\n";
+		}
+		// メッセージを追加
+		$bot->add_text_builder($locaation_test);
+	}
+
 	// 画像メッセージの追加
 	if ($text == "イメージ") {
 		$bot->add_image_builder($photo_url,$photo_url);
