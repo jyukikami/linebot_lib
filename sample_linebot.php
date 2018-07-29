@@ -100,11 +100,11 @@ try {
 	if ($text == "ボタン") {
 		// アクションボタンの作成
 		$action_button = array();
-		$action_button[] = $bot->create_action_builder("text","TypeText","test_text");
-		$action_button[] = $bot->create_action_builder("post","TypePost","post_text");
-		$action_button[] = $bot->create_action_builder("url","TypeUrl","https://developers.line.me/ja/reference/messaging-api/");
-		$action_button[] = $bot->create_action_builder("date","Typedate","date_text","datetime");
-		$default_action = $bot->create_action_builder("text","TypeText","デフォルトアクション");
+		$action_button[] = $bot->create_action_builder("text","TypeText",["text"=>"test_text"]);
+		$action_button[] = $bot->create_action_builder("post","TypePost",["post"=>"post_text"]);
+		$action_button[] = $bot->create_action_builder("url","TypeUrl",["url"=>"https://developers.line.me/ja/reference/messaging-api/"]);
+		$action_button[] = $bot->create_action_builder("date","Typedate",["post"=>"date_text"],"datetime");
+		$default_action = $bot->create_action_builder("text","TypeText",["text"=>"デフォルトアクション"]);
 		$result = $bot->add_button_template_builder("代替テキスト","アクションボタンのテストもかねて",$action_button,"テンプレートボタンテスト",$photo_url,$default_action);
 	}
 
@@ -115,8 +115,8 @@ try {
 		$text = "テスト";
 		$text = urlencode($text);
 
-		$action_button[] = $bot->create_action_builder("url","押せ","line://msg/text/?" . $text);
-		$action_button[] = $bot->create_action_builder("url","タイムライン","line://home/public/main?id=sah1718q");
+		$action_button[] = $bot->create_action_builder("url","押せ",["url"=>"line://msg/text/?" . $text]);
+		$action_button[] = $bot->create_action_builder("url","タイムライン",["url"=>"line://home/public/main?id=sah1718q"]);
 		$result = $bot->add_confirm_template_builder("代替テキスト","確認テンプレートのテスト\nurlスキームのテストもかねて",$action_button);
 	}
 
@@ -127,12 +127,12 @@ try {
 		for ($i=0; $i < 10; $i++) {
 			// アクションボタンの作成 1~3まで有効
 			$action_button = array();
-			$action_button[] = $bot->create_action_builder("text","TypeText","test_text");
-			$action_button[] = $bot->create_action_builder("post","TypePost","post_text");
-			$action_button[] = $bot->create_action_builder("url","TypeUrl","line://msg/text/?test_text");
+			$action_button[] = $bot->create_action_builder("text","TypeText",["text"=>"test_text"]);
+			$action_button[] = $bot->create_action_builder("post","TypePost",["post"=>"post_text","text"=>"post"]);
+			$action_button[] = $bot->create_action_builder("url","TypeUrl",["url"=>"line://msg/text/?test_text"]);
 			// デフォルトアクションの作成
 			$data_text = "デフォルトアクションtest" . ($i+1);
-			$default_action = $bot->create_action_builder("text","TypeText",$data_text);
+			$default_action = $bot->create_action_builder("text","TypeText",["text"=>$data_text]);
 
 			// 本文
 			$text = ($i+1) . "ページ";
@@ -154,7 +154,7 @@ try {
 		$image_column_builders = array();
 		for ($i=1; $i <= 10; $i++) {
 			// アクションビルダーを作成
-			$action_builder = $bot->create_action_builder("text","","イメージ" . $i);
+			$action_builder = $bot->create_action_builder("text","",["text"=>"イメージ" . $i]);
 			// イメージカラムビルダーを作成
 			$image_column_builders[] = $bot->create_image_column_template_builder($photo_url,$action_builder);
 		}
@@ -198,7 +198,7 @@ try {
 		$flex_box_mein['body'] = $bot->create_box_component("vertical",$flex_components['body'],array("spacing"=>3));
 
 		// フッターのアクションボタン
-		$action = $bot->create_action_builder("text","次のflexSample","flex2");
+		$action = $bot->create_action_builder("text","次のflexSample",["text"=>"flex2"]);
 		$flex_components['footer'][] = $bot->create_button_component($action,array("style"=>"secondary"));
 		// フッターメインボックス
 		$flex_box_mein['footer'] = $bot->create_box_component("vertical",$flex_components['footer'],array("spacing"=>3));
@@ -247,7 +247,7 @@ try {
 
 		// フッターの情報
 		// フッターのアクションボタン
-		$action = $bot->create_action_builder("text","次のflexSample","flex3");
+		$action = $bot->create_action_builder("text","次のflexSample",["text"=>"flex3"]);
 		$flex_components['footer'][] = $bot->create_button_component($action,array("style"=>"secondary"));
 		// フッターメインボックス
 		$flex_box_mein['footer'] = $bot->create_box_component("vertical",$flex_components['footer'],array("spacing"=>3));
@@ -284,7 +284,7 @@ try {
 		$flex_box_mein['body'] = $bot->create_box_component("vertical",$flex_components['body'],array("spacing"=>3));
 
 		// フッターのアクションボタン
-		$action = $bot->create_action_builder("text","次のflexSample","flex4");
+		$action = $bot->create_action_builder("text","次のflexSample",["text"=>"flex4"]);
 		$flex_components['footer'][] = $bot->create_button_component($action,array("style"=>"secondary"));
 		// フッターメインボックス
 		$flex_box_mein['footer'] = $bot->create_box_component("vertical",$flex_components['footer'],array("spacing"=>3));
@@ -312,24 +312,24 @@ try {
 		// flexサンプル
 		// タイトル
 		$flex_components['body'][] = $bot->create_text_component("flexサンプル一覧",array("size"=>7,"weight"=>"bold"));
-		$action = $bot->create_action_builder("post","","そこじゃなくて青文字の一覧の方をタップして");
+		$action = $bot->create_action_builder("post","",["post"=>"そこじゃなくて青文字の一覧の方をタップして"]);
 		$flex_components['body'][] = $bot->create_text_component("タップ可能",array("size"=>5,"weight"=>"bold","action"=>$action));
 
 		// アクション作成
-		$action = $bot->create_action_builder("text","","flex");
+		$action = $bot->create_action_builder("text","",["text"=>"flex"]);
 		// 項目作成
 		$flex_components['body'][] = $bot->create_text_component("flex1",array("size"=>4,"wrap"=>true,"action"=>$action,"align"=>"center","color"=>"#0000ff"));
 
-		$action = $bot->create_action_builder("text","","flex2");
+		$action = $bot->create_action_builder("text","",["text"=>"flex2"]);
 		$flex_components['body'][] = $bot->create_text_component("flex2",array("size"=>4,"wrap"=>true,"action"=>$action,"align"=>"center","color"=>"#0000ff"));
 
-		$action = $bot->create_action_builder("text","","flex3");
+		$action = $bot->create_action_builder("text","",["text"=>"flex3"]);
 		$flex_components['body'][] = $bot->create_text_component("flex3",array("size"=>4,"wrap"=>true,"action"=>$action,"align"=>"center","color"=>"#0000ff"));
 
-		$action = $bot->create_action_builder("text","","flex4");
+		$action = $bot->create_action_builder("text","",["text"=>"flex4"]);
 		$flex_components['body'][] = $bot->create_text_component("flex4",array("size"=>4,"wrap"=>true,"action"=>$action,"align"=>"center","color"=>"#0000ff"));
 
-		$action = $bot->create_action_builder("text","","flex_all");
+		$action = $bot->create_action_builder("text","",["text"=>"flex_all"]);
 		$flex_components['body'][] = $bot->create_text_component("全て表示",array("size"=>4,"wrap"=>true,"action"=>$action,"align"=>"center","color"=>"#0000ff"));
 
 
@@ -410,7 +410,7 @@ function create_sample_flex(){
 	$flex_box_mein['body'] = $bot->create_box_component("vertical",$flex_components['body'],array("spacing"=>3));
 
 	// フッターのアクションボタン
-	$action = $bot->create_action_builder("text","次のflexSample","flex2");
+	$action = $bot->create_action_builder("text","次のflexSample",["text"=>"flex2"]);
 	$flex_components['footer'][] = $bot->create_button_component($action,array("style"=>"secondary"));
 	// フッターメインボックス
 	$flex_box_mein['footer'] = $bot->create_box_component("vertical",$flex_components['footer'],array("spacing"=>3));
@@ -456,7 +456,7 @@ function create_sample_flex2(){
 
 	// フッターの情報
 	// フッターのアクションボタン
-	$action = $bot->create_action_builder("text","次のflexSample","flex3");
+	$action = $bot->create_action_builder("text","次のflexSample",["text"=>"flex3"]);
 	$flex_components['footer'][] = $bot->create_button_component($action,array("style"=>"secondary"));
 	// フッターメインボックス
 	$flex_box_mein['footer'] = $bot->create_box_component("vertical",$flex_components['footer'],array("spacing"=>3));
@@ -491,7 +491,7 @@ function create_sample_flex3($photo_url){
 	$flex_box_mein['body'] = $bot->create_box_component("vertical",$flex_components['body'],array("spacing"=>3));
 
 	// フッターのアクションボタン
-	$action = $bot->create_action_builder("text","次のflexSample","flex4");
+	$action = $bot->create_action_builder("text","次のflexSample",["text"=>"flex4"]);
 	$flex_components['footer'][] = $bot->create_button_component($action,array("style"=>"secondary"));
 	// フッターメインボックス
 	$flex_box_mein['footer'] = $bot->create_box_component("vertical",$flex_components['footer'],array("spacing"=>3));
@@ -515,15 +515,15 @@ function create_sample_flex4(){
 
 	// flexサンプル
 	$flex_components['body'][] = $bot->create_text_component("flexサンプル一覧",array("size"=>7,"weight"=>"bold"));
-	$action = $bot->create_action_builder("post","","そこじゃなくて青文字の一覧の方をタップして");
+	$action = $bot->create_action_builder("post","",["post"=>"そこじゃなくて青文字の一覧の方をタップして"]);
 	$flex_components['body'][] = $bot->create_text_component("タップ可能",array("size"=>5,"weight"=>"bold","action"=>$action));
-	$action = $bot->create_action_builder("text","","flex");
+	$action = $bot->create_action_builder("text","",["text"=>"flex"]);
 	$flex_components['body'][] = $bot->create_text_component("flex1",array("size"=>4,"wrap"=>true,"action"=>$action,"align"=>"center","color"=>"#0000ff"));
-	$action = $bot->create_action_builder("text","","flex2");
+	$action = $bot->create_action_builder("text","",["text"=>"flex2"]);
 	$flex_components['body'][] = $bot->create_text_component("flex2",array("size"=>4,"wrap"=>true,"action"=>$action,"align"=>"center","color"=>"#0000ff"));
-	$action = $bot->create_action_builder("text","","flex3");
+	$action = $bot->create_action_builder("text","",["text"=>"flex3"]);
 	$flex_components['body'][] = $bot->create_text_component("flex3",array("size"=>4,"wrap"=>true,"action"=>$action,"align"=>"center","color"=>"#0000ff"));
-	$action = $bot->create_action_builder("text","","flex4");
+	$action = $bot->create_action_builder("text","",["text"=>"flex4"]);
 	$flex_components['body'][] = $bot->create_text_component("flex4",array("size"=>4,"wrap"=>true,"action"=>$action,"align"=>"center","color"=>"#0000ff"));
 
 

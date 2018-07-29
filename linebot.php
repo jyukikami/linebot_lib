@@ -1180,7 +1180,7 @@ class LineBotClass extends LINEBot
 	 * アクションのビルダーを作成
 	 * @param  string $action_type アクションタイプ  text post url date
 	 * @param  string $label       表示するテキスト
-	 * @param  string $content     アクションした時に使用するデータ
+	 * @param  array  $content     アクションした時に使用するデータ
 	 * @param  string $date_mode   アクションタイプがdateの時、必須 date time datetime
 	 * @param  string $initial     アクションタイプがdateの時 日時の初期値
 	 * @param  string $limit_max   アクションタイプがdateの時 日時の上限
@@ -1200,16 +1200,21 @@ class LineBotClass extends LINEBot
 			$label = null;
 		}
 
+		// 空ならnull
+		$post = !empty($content['post']) ? $content['post'] : null;
+		$text = !empty($content['text']) ? $content['text'] : null;
+		$url  = !empty($content['url']) ? $content['url'] : null;
+
 		// アクションタイプ判別
 		switch ($action_type) {
 			case 'text':
-				return new MessageTemplateActionBuilder($label,$content);
+				return new MessageTemplateActionBuilder($label,$text);
 				break;
 			case 'post':
-				return new PostbackTemplateActionBuilder($label,$content);
+				return new PostbackTemplateActionBuilder($label,$post,$text);
 				break;
 			case 'url':
-				return new UriTemplateActionBuilder($label,$content);
+				return new UriTemplateActionBuilder($label,$url);
 				break;
 			case 'date':
 				if (empty($date_mode)) {
@@ -1221,7 +1226,7 @@ class LineBotClass extends LINEBot
 					$this->set_error("存在しないdate_modeです");
 					return false;
 				}
-				return new DatetimePickerTemplateActionBuilder($label,$content,$date_mode,$initial,$limit_max,$limit_min);
+				return new DatetimePickerTemplateActionBuilder($label,$post,$date_mode,$initial,$limit_max,$limit_min);
 				break;
 			default:
 				$this->set_error("存在しないアクションタイプです");
