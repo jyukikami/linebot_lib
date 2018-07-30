@@ -62,3 +62,6 @@ $bot->add_text_builder($text);
 $bot->reply();
 ~~~
 これで送信したメッセージと同じメッセージが2つ返信されます
+
+# Qiita
+[こちらで](https://qiita.com/jyuki/items/035cfeb72d7d359c738b)もう少し解説してますのでご覧ください
