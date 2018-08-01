@@ -53,6 +53,7 @@ class LineBotClass extends LINEBot
 	private $bot;
 	private $reply_token;
 	private $events;
+	private $event;
 	private $builder_stok = array();
 	private $error_stok = array();
 
@@ -71,10 +72,6 @@ class LineBotClass extends LINEBot
 			$signature = $_SERVER['HTTP_' . HTTPHeader::LINE_SIGNATURE];
 			// 署名が正当かチェック、正当ならリクエストをパースし配列に代入
 			$this->events = $this->parseEventRequest(file_get_contents('php://input'),$signature);
-			foreach ($this->events as $key => $event) {
-				// 返信トークン取得
-				$this->reply_token = $event -> getReplyToken();
-			}
 		}
 
 		// flexメッセージのライブラリ読み込み
@@ -90,19 +87,37 @@ class LineBotClass extends LINEBot
 	}
 
 	/**
+	 * イベントを取り出してイベントを更新
+	 * @return bool イベントがあるならtrue ないならfalse
+	 */
+	public function check_shift_event()
+	{
+		// イベントを取り出す
+		$this->event = array_shift($this->events);
+		// イベントがあるなら
+		if (!empty($this->event)) {
+			// 返信トークンを更新
+			$this->reply_token = $this->event -> getReplyToken();
+			// ビルダーストックを初期化
+			$this->builder_stok = array();
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+	/**
 	 * TextMessageのテキストを取得
 	 * @return string or false
 	 */
 	public function get_text()
 	{
-		foreach ($this->events as $key => $event) {
-			// イベントがTextMessageのclassかチェック
-			if ($event instanceof TextMessage) {
-				return $event->getText();
-			}else{
-				$this->set_error("テキストメッセージではありません");
-				return false;
-			}
+		// イベントがTextMessageのclassかチェック
+		if ($this->event instanceof TextMessage) {
+			return $this->event->getText();
+		}else{
+			$this->set_error("テキストメッセージではありません");
+			return false;
 		}
 	}
 
@@ -112,14 +127,12 @@ class LineBotClass extends LINEBot
 	 */
 	public function get_post_data()
 	{
-		foreach ($this->events as $key => $event) {
-			// イベントがPostbackEventのclassかチェック
-			if ($event instanceof PostbackEvent) {
-				return $event->getPostbackData();
-			}else{
-				$this->set_error("ポストバックイベントではありません");
-				return false;
-			}
+		// イベントがPostbackEventのclassかチェック
+		if ($this->event instanceof PostbackEvent) {
+			return $this->event->getPostbackData();
+		}else{
+			$this->set_error("ポストバックイベントではありません");
+			return false;
 		}
 	}
 
@@ -129,14 +142,12 @@ class LineBotClass extends LINEBot
 	 */
 	public function get_post_params()
 	{
-		foreach ($this->events as $key => $event) {
-			// イベントがPostbackEventのclassかチェック
-			if ($event instanceof PostbackEvent) {
-				return $event->getPostbackParams();
-			}else{
-				$this->set_error("ポストバックイベントではありません");
-				return false;
-			}
+		// イベントがPostbackEventのclassかチェック
+		if ($this->event instanceof PostbackEvent) {
+			return $this->event->getPostbackParams();
+		}else{
+			$this->set_error("ポストバックイベントではありません");
+			return false;
 		}
 	}
 
@@ -146,17 +157,15 @@ class LineBotClass extends LINEBot
 	 */
 	public function get_stamp_id()
 	{
-		foreach ($this->events as $key => $event) {
-			// イベントがStickerMessageのclassかチェック
-			if ($event instanceof StickerMessage) {
-				$id_data = array();
-				$id_data['sticker_id'] = $event->getStickerId();
-				$id_data['package_id'] = $event->getPackageId();
-				return $id_data;
-			}else{
-				$this->set_error("スタンプメッセージではありません");
-				return false;
-			}
+		// イベントがStickerMessageのclassかチェック
+		if ($this->event instanceof StickerMessage) {
+			$id_data = array();
+			$id_data['sticker_id'] = $this->event->getStickerId();
+			$id_data['package_id'] = $this->event->getPackageId();
+			return $id_data;
+		}else{
+			$this->set_error("スタンプメッセージではありません");
+			return false;
 		}
 	}
 
@@ -166,19 +175,17 @@ class LineBotClass extends LINEBot
 	 */
 	public function get_location()
 	{
-		foreach ($this->events as $key => $event) {
-			// イベントがLocationMessageのclassかチェック
-			if ($event instanceof LocationMessage) {
-				$location = array();
-				$location['title'] = $event->getTitle();
-				$location['address'] = $event->getAddress();
-				$location['latitude'] = $event->getLatitude();
-				$location['longitude'] = $event->getLongitude();
-				return $location;
-			}else{
-				$this->set_error("位置情報ではありません");
-				return false;
-			}
+		// イベントがLocationMessageのclassかチェック
+		if ($this->event instanceof LocationMessage) {
+			$location = array();
+			$location['title'] = $this->event->getTitle();
+			$location['address'] = $this->event->getAddress();
+			$location['latitude'] = $this->event->getLatitude();
+			$location['longitude'] = $this->event->getLongitude();
+			return $location;
+		}else{
+			$this->set_error("位置情報ではありません");
+			return false;
 		}
 	}
 
@@ -195,13 +202,12 @@ class LineBotClass extends LINEBot
 	 */
 	public function get_message_type()
 	{
-		foreach ($this->events as $key => $event) {
-			if ($event instanceof MessageEvent) {
-				return $event->getMessageType();
-			}else{
-				$this->set_error("メッセージイベントではありません");
-				return false;
-			}
+		// イベントがMessageEventのclassかチェック
+		if ($this->event instanceof MessageEvent) {
+			return $this->event->getMessageType();
+		}else{
+			$this->set_error("メッセージイベントではありません");
+			return false;
 		}
 	}
 
@@ -211,13 +217,12 @@ class LineBotClass extends LINEBot
 	 */
 	public function get_message_id()
 	{
-		foreach ($this->events as $key => $event) {
-			if ($event instanceof MessageEvent) {
-				return $event->getMessageId();
-			}else{
-				$this->set_error("メッセージイベントではありません");
-				return false;
-			}
+		// イベントがMessageEventのclassかチェック
+		if ($this->event instanceof MessageEvent) {
+			return $this->event->getMessageId();
+		}else{
+			$this->set_error("メッセージイベントではありません");
+			return false;
 		}
 	}
 
@@ -233,9 +238,7 @@ class LineBotClass extends LINEBot
 	 */
 	public function get_event_type()
 	{
-		foreach ($this->events as $key => $event) {
-			return $event->getType();
-		}
+		return $this->event->getType();
 	}
 
 	/**
@@ -244,9 +247,7 @@ class LineBotClass extends LINEBot
 	 */
 	public function get_event_sonrce_type()
 	{
-		foreach ($this->events as $key => $event) {
-			return $event->getEventSourceType();
-		}
+		return $this->event->getEventSourceType();
 	}
 
 	/**
@@ -255,9 +256,7 @@ class LineBotClass extends LINEBot
 	 */
 	public function get_user_id()
 	{
-		foreach ($this->events as $key => $event) {
-			return $event->getUserId();
-		}
+		return $this->event->getUserId();
 	}
 
 	/**
@@ -266,9 +265,7 @@ class LineBotClass extends LINEBot
 	 */
 	public function get_group_id()
 	{
-		foreach ($this->events as $key => $event) {
-			return $event->getGroupId();
-		}
+		return $this->event->getGroupId();
 	}
 
 	/**
@@ -277,9 +274,7 @@ class LineBotClass extends LINEBot
 	 */
 	public function get_room_id()
 	{
-		foreach ($this->events as $key => $event) {
-			return $event->getRoomId();
-		}
+		return $this->event->getRoomId();
 	}
 
 	/**
@@ -291,9 +286,7 @@ class LineBotClass extends LINEBot
 	 */
 	public function get_event_source_id()
 	{
-		foreach ($this->events as $key => $event) {
-			return $event->getEventSourceId();
-		}
+		return $this->event->getEventSourceId();
 	}
 
 	/**
@@ -939,15 +932,15 @@ class LineBotClass extends LINEBot
 	 */
 	public function create_text_component($text,$options=array())
 	{
-		$flex    = $options['flex'] ?? null;
-		$margin  = $options['margin'] ?? null;
-		$size    = $options['size'] ?? null;
-		$align   = $options['align'] ?? null;
-		$gravity = $options['gravity'] ?? null;
-		$wrap    = $options['wrap'] ?? null;
-		$weight  = $options['weight'] ?? null;
-		$color   = $options['color'] ?? null;
-		$action  = $options['action'] ?? null;
+		$flex    = !empty($options['flex'])    ? $options['flex'] : null;
+		$margin  = !empty($options['margin'])  ? $options['margin'] : null;
+		$size    = !empty($options['size'])    ? $options['size'] : null;
+		$align   = !empty($options['align'])   ? $options['align'] : null;
+		$gravity = !empty($options['gravity']) ? $options['gravity'] : null;
+		$wrap    = !empty($options['wrap'])    ? $options['wrap'] : null;
+		$weight  = !empty($options['weight'])  ? $options['weight'] : null;
+		$color   = !empty($options['color'])   ? $options['color'] : null;
+		$action  = !empty($options['action'])  ? $options['action'] : null;
 
 		return new TextBuilder($text,$flex,$margin,$size,$align,$gravity,$wrap,$weight,$color,$action);
 	}
@@ -986,12 +979,12 @@ class LineBotClass extends LINEBot
 	 */
 	public function create_button_component($action,$options=array())
 	{
-		$flex = $options['flex'] ?? null;
-		$margin = $options['margin'] ?? null;
-		$height = $options['height'] ?? null;
-		$style = $options['style'] ?? null;
-		$color = $options['color'] ?? null;
-		$gravity = $options['gravity'] ?? null;
+		$flex    = !empty($options['flex'])    ? $options['flex'] : null;
+		$margin  = !empty($options['margin'])  ? $options['margin'] : null;
+		$height  = !empty($options['height'])  ? $options['height'] : null;
+		$style   = !empty($options['style'])   ? $options['style'] : null;
+		$color   = !empty($options['color'])   ? $options['color'] : null;
+		$gravity = !empty($options['gravity']) ? $options['gravity'] : null;
 
 		return new ButtonBuilder($action,$flex,$margin,$height,$style,$color,$gravity);
 	}
@@ -1030,9 +1023,9 @@ class LineBotClass extends LINEBot
 	 */
 	public function create_box_component($layout,$contents,$options=array())
 	{
-		$flex = $options['flex'] ?? null;
-		$spacing = $options['spacing'] ?? null;
-		$margin = $options['margin'] ?? null;
+		$flex    = !empty($options['flex'])    ? $options['flex'] : null;
+		$spacing = !empty($options['spacing']) ? $options['spacing'] : null;
+		$margin  = !empty($options['margin'])  ? $options['margin'] : null;
 
 		return new BoxBuilder($layout,$contents,$flex,$spacing,$margin);
 	}
@@ -1100,15 +1093,15 @@ class LineBotClass extends LINEBot
 	 */
 	public function create_image_component($url,$options=array())
 	{
-		$margin = $options['margin'] ?? null;
-		$flex = $options['flex'] ?? null;
-		$align = $options['align'] ?? null;
-		$gravity = $options['gravity'] ?? null;
-		$size = $options['size'] ?? null;
-		$aspectRatio = $options['aspectRatio'] ?? null;
-		$aspectMode = $options['aspectMode'] ?? null;
-		$backgroundColor = $options['backgroundColor'] ?? null;
-		$action = $options['action'] ?? null;
+		$margin          = !empty($options['margin'])          ? $options['margin'] : null;
+		$flex            = !empty($options['flex'])            ? $options['flex'] : null;
+		$align           = !empty($options['align'])           ? $options['align'] : null;
+		$gravity         = !empty($options['gravity'])         ? $options['gravity'] : null;
+		$size            = !empty($options['size'])            ? $options['size'] : null;
+		$aspectRatio     = !empty($options['aspectRatio'])     ? $options['aspectRatio'] : null;
+		$aspectMode      = !empty($options['aspectMode'])      ? $options['aspectMode'] : null;
+		$backgroundColor = !empty($options['backgroundColor']) ? $options['backgroundColor'] : null;
+		$action          = !empty($options['action'])          ? $options['action'] : null;
 
 		return new ImageBuilder($url,$margin,$flex,$align,$gravity,$size,$aspectRatio,$aspectMode,$backgroundColor,$action);
 	}
@@ -1127,8 +1120,8 @@ class LineBotClass extends LINEBot
 	 */
 	public function create_separator_container($options=array())
 	{
-		$margin = $options['margin'] ?? null;
-		$color = $options['color'] ?? null;
+		$margin = !empty($options['margin']) ? $options['margin'] : null;
+		$color  = !empty($options['color'])  ? $options['color'] : null;
 		return new SeparatorBuilder($margin,$color);
 	}
 
@@ -1151,11 +1144,11 @@ class LineBotClass extends LINEBot
 	 */
 	public function create_bubble_container($blocks,$direction=null)
 	{
-		$header = $blocks['header'] ?? null;
-		$hero   = $blocks['hero'] ?? null;
-		$body   = $blocks['body'] ?? null;
-		$footer = $blocks['footer'] ?? null;
-		$styles = $blocks['styles'] ?? null;
+		$header = !empty($blocks['header']) ? $blocks['header'] : null;
+		$hero   = !empty($blocks['hero'])   ? $blocks['hero'] : null;
+		$body   = !empty($blocks['body'])   ? $blocks['body'] : null;
+		$footer = !empty($blocks['footer']) ? $blocks['footer'] : null;
+		$styles = !empty($blocks['styles']) ? $blocks['styles'] : null;
 
 		return new BubbleBuilder($direction,$header,$hero,$body,$footer,$styles);
 	}
