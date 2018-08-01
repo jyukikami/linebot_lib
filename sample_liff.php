@@ -34,7 +34,7 @@ try {
 <head>
 	<title></title>
 	<script type="text/javascript">
-		var error = "<?echo $reuslt['message'] ?? "";?>";
+		var error = "<?echo !empty($reuslt['message']) ? $reuslt['message'] : "";?>";
 		if (error != "") alert("error:" + error);
 	</script>
 </head>
