@@ -1170,6 +1170,105 @@ class LineBotClass extends LINEBot
 	}
 
 	/**
+	 * テキストアクションを作成
+	 * @param  string $label ラベル
+	 * @param  string $text  テキスト
+	 * @return class         テキストアクション
+	 */
+	public function create_text_action_builder($label,$text)
+	{
+		// 空チェック
+		if (empty($text)) {
+			$this->set_error("テキストは必須です");
+			return false;
+		}
+		// ラベルが空なら
+		if (empty($label)) {
+			$label = null;
+		}
+		// テキストアクションを返す
+		return $this->create_action_builder("text",$label,["text"=>$text]);
+	}
+
+	/**
+	 * postアクションを作成
+	 * @param  string $label ラベル
+	 * @param  string $post  postする値
+	 * @param  string $text  アクションしたときに表示するテキスト
+	 * @return class         postアクション
+	 */
+	public function create_post_action_builder($label,$post,$text=null)
+	{
+		// 空チェック
+		if (empty($post)) {
+			$this->set_error("postは必須です");
+			return false;
+		}
+		// ラベルが空なら
+		if (empty($label)) {
+			$label = null;
+		}
+		return $this->create_action_builder("post",$label,["post"=>$post,"text"=>$text]);
+	}
+
+	/**
+	 * urlアクションを作成
+	 * @param  string  $label                 ラベル
+	 * @param  string  $url                   url
+	 * @param  boolean $external_browser_flag trueなら外部ブラウザで開く falseならlineブラウザで開く
+	 * @return class                          urlアクション
+	 */
+	public function create_url_action_builder($label,$url="",$external_browser_flag=false)
+	{
+		// 空チェック
+		if (empty($url)) {
+			$this->set_error("urlは必須です");
+			return false;
+		}
+		// ラベルが空なら
+		if (empty($label)) {
+			$label = null;
+		}
+		// 外部ブラウザで開くか
+		if ($external_browser_flag) {
+			$url .= strpos($url,'?') !== false ? "&" : "?";
+			$url .= "openExternalBrowser=1";
+		}
+		return $this->create_action_builder("url",$label,["url"=>$url]);
+	}
+
+	/**
+	 * dateアクションを作成
+	 * @param  string $label     ラベル
+	 * @param  string $post      postするあたい
+	 * @param  string $date_mode dateのタイプ date time datetime
+	 * @param  array  $options   オプションの連想配列
+	 * @return [type]            dateアクション
+	 */
+	public function create_date_action_builder($label,$post,$date_mode,$options=array())
+	{
+		// 空チェック
+		if (empty($post)) {
+			$this->set_error("postは必須です");
+			return false;
+		}
+		if (empty($date_mode)) {
+			$this->set_error("date_modeは必須です");
+			return false;
+		}
+		// ラベルが空なら
+		if (empty($label)) {
+			$label = null;
+		}
+		// オプションのチェック
+		$initial   = !empty($options['initial'])   ? $initial : null;
+		$limit_max = !empty($options['limit_max']) ? $limit_max : null;
+		$limit_min = !empty($options['limit_min']) ? $limit_min : null;
+
+		return $this->create_action_builder("date",$label,["post"=>$post],"datetime",$initial,$limit_max,$limit_min);
+	}
+
+	/**
 	 * アクションのビルダーを作成
 	 * @param  string $action_type アクションタイプ  text post url date
 	 * @param  string $label       表示するテキスト
