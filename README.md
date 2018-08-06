@@ -37,7 +37,7 @@ linebotにメッセージを送信するとそのままオウム返しします
 オウム返しに必要なコード
 ~~~
 <?php
-/ ライブラリを読み込み
+// ライブラリを読み込み
 require_once __DIR__ . '/linebot.php';
 // クラスをインスタンス化
 $bot = new LineBotClass();
@@ -56,7 +56,7 @@ while ($bot->check_shift_event()) {
 なの2件のメッセージを返信したいときは
 ~~~
 <?php
-/ ライブラリを読み込み
+// ライブラリを読み込み
 require_once __DIR__ . '/linebot.php';
 // クラスをインスタンス化
 $bot = new LineBotClass();
