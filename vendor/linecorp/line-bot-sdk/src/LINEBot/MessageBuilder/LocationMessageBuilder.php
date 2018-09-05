@@ -36,6 +36,8 @@ class LocationMessageBuilder implements MessageBuilder
     private $latitude;
     /** @var double */
     private $longitude;
+    /** @var array */
+    private $quickReplys;
 
     /**
      * LocationMessageBuilder constructor.
@@ -45,12 +47,13 @@ class LocationMessageBuilder implements MessageBuilder
      * @param double $latitude
      * @param double $longitude
      */
-    public function __construct($title, $address, $latitude, $longitude)
+    public function __construct($title, $address, $latitude, $longitude,$quickReplys=array())
     {
         $this->title = $title;
         $this->address = $address;
         $this->latitude = $latitude;
         $this->longitude = $longitude;
+        $this->quickReplys = $quickReplys;
     }
 
     /**
@@ -60,14 +63,27 @@ class LocationMessageBuilder implements MessageBuilder
      */
     public function buildMessage()
     {
-        return [
-            [
-                'type' => MessageType::LOCATION,
-                'title' => $this->title,
-                'address' => $this->address,
-                'latitude' => $this->latitude,
-                'longitude' => $this->longitude,
-            ]
+        $actions = array();
+        if (!empty($this->quickReplys)) {
+            foreach ($this->quickReplys as $key => $action) {
+                $actions[] = [
+                    'type' => 'action',
+                    'imageUrl' => $action["icon"],
+                    'action' => $action["action"]->buildTemplateAction()
+                ];
+            }
+        }
+
+        $message = [
+            'type' => MessageType::LOCATION,
+            'title' => $this->title,
+            'address' => $this->address,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
         ];
+        if (!empty($actions)) {
+            $message['quickReply']['items'] = $actions;
+        }
+        return [$message];
     }
 }

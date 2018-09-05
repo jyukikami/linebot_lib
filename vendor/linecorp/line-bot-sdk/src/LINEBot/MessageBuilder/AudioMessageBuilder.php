@@ -32,6 +32,8 @@ class AudioMessageBuilder implements MessageBuilder
     private $originalContentUrl;
     /** @var int */
     private $duration;
+    /** @var array */
+    private $quickReplys;
 
     /**
      * AudioMessageBuilder constructor.
@@ -39,10 +41,11 @@ class AudioMessageBuilder implements MessageBuilder
      * @param string $originalContentUrl URL that serves audio file.
      * @param int $duration Duration of audio file (milli seconds)
      */
-    public function __construct($originalContentUrl, $duration)
+    public function __construct($originalContentUrl, $duration,$quickReplys=array())
     {
         $this->originalContentUrl = $originalContentUrl;
         $this->duration = $duration;
+        $this->quickReplys = $quickReplys;
     }
 
     /**
@@ -51,12 +54,26 @@ class AudioMessageBuilder implements MessageBuilder
      */
     public function buildMessage()
     {
-        return [
+        $actions = array();
+        if (!empty($this->quickReplys)) {
+            foreach ($this->quickReplys as $key => $action) {
+                $actions[] = [
+                    'type' => 'action',
+                    'imageUrl' => $action["icon"],
+                    'action' => $action["action"]->buildTemplateAction()
+                ];
+            }
+        }
+        $message = [
             [
                 'type' => MessageType::AUDIO,
                 'originalContentUrl' => $this->originalContentUrl,
                 'duration' => $this->duration,
             ]
         ];
+        if (!empty($actions)) {
+            $message['quickReply']['items'] = $actions;
+        }
+        return [$message];
     }
 }

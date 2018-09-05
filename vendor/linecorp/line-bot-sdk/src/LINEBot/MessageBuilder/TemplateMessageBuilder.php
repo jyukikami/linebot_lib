@@ -32,16 +32,19 @@ class TemplateMessageBuilder implements MessageBuilder
     private $altText;
     /** @var TemplateBuilder */
     private $templateBuilder;
+    /** @var array */
+    private $quickReplys;
 
     /**
      * TemplateMessageBuilder constructor.
      * @param string $altText
      * @param TemplateBuilder $templateBuilder
      */
-    public function __construct($altText, TemplateBuilder $templateBuilder)
+    public function __construct($altText, TemplateBuilder $templateBuilder,$quickReplys=array())
     {
         $this->altText = $altText;
         $this->templateBuilder = $templateBuilder;
+        $this->quickReplys = $quickReplys;
     }
 
     /**
@@ -51,12 +54,24 @@ class TemplateMessageBuilder implements MessageBuilder
      */
     public function buildMessage()
     {
-        return [
-            [
-                'type' => MessageType::TEMPLATE,
-                'altText' => $this->altText,
-                'template' => $this->templateBuilder->buildTemplate(),
-            ]
+        $actions = array();
+        if (!empty($this->quickReplys)) {
+            foreach ($this->quickReplys as $key => $action) {
+                $actions[] = [
+                    'type' => 'action',
+                    'imageUrl' => $action["icon"],
+                    'action' => $action["action"]->buildTemplateAction()
+                ];
+            }
+        }
+        $message = [
+            'type' => MessageType::TEMPLATE,
+            'altText' => $this->altText,
+            'template' => $this->templateBuilder->buildTemplate(),
         ];
+        if (!empty($actions)) {
+            $message['quickReply']['items'] = $actions;
+        }
+        return [$message];
     }
 }

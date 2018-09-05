@@ -32,6 +32,8 @@ class StickerMessageBuilder implements MessageBuilder
     private $packageId;
     /** @var string */
     private $stickerId;
+    /** @var array */
+    private $quickReplys;
 
     /**
      * StickerMessageBuilder constructor.
@@ -39,10 +41,11 @@ class StickerMessageBuilder implements MessageBuilder
      * @param string $packageId
      * @param string $stickerId
      */
-    public function __construct($packageId, $stickerId)
+    public function __construct($packageId, $stickerId,$quickReplys=array())
     {
         $this->packageId = $packageId;
         $this->stickerId = $stickerId;
+        $this->quickReplys = $quickReplys;
     }
 
     /**
@@ -52,12 +55,24 @@ class StickerMessageBuilder implements MessageBuilder
      */
     public function buildMessage()
     {
-        return [
-            [
-                'type' => MessageType::STICKER,
-                'packageId' => $this->packageId,
-                'stickerId' => $this->stickerId,
-            ]
+        $actions = array();
+        if (!empty($this->quickReplys)) {
+            foreach ($this->quickReplys as $key => $action) {
+                $actions[] = [
+                    'type' => 'action',
+                    'imageUrl' => $action["icon"],
+                    'action' => $action["action"]->buildTemplateAction()
+                ];
+            }
+        }
+        $message = [
+            'type' => MessageType::STICKER,
+            'packageId' => $this->packageId,
+            'stickerId' => $this->stickerId,
         ];
+        if (!empty($actions)) {
+            $message['quickReply']['items'] = $actions;
+        }
+        return [$message];
     }
 }

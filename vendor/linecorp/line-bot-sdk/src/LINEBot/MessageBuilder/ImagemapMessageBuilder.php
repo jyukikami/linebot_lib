@@ -38,6 +38,8 @@ class ImagemapMessageBuilder implements MessageBuilder
     private $baseSizeBuilder;
     /** @var ImagemapActionBuilder[] */
     private $imagemapActionBuilders;
+    /** @var array */
+    private $quickReplys;
 
     /** @var array */
     private $message = [];
@@ -50,12 +52,13 @@ class ImagemapMessageBuilder implements MessageBuilder
      * @param BaseSizeBuilder $baseSizeBuilder
      * @param ImagemapActionBuilder[] $imagemapActionBuilders
      */
-    public function __construct($baseUrl, $altText, $baseSizeBuilder, array $imagemapActionBuilders)
+    public function __construct($baseUrl, $altText, $baseSizeBuilder, array $imagemapActionBuilders,$quickReplys=array())
     {
         $this->baseUrl = $baseUrl;
         $this->altText = $altText;
         $this->baseSizeBuilder = $baseSizeBuilder;
         $this->imagemapActionBuilders = $imagemapActionBuilders;
+        $this->quickReplys = $quickReplys;
     }
 
     /**
@@ -74,14 +77,28 @@ class ImagemapMessageBuilder implements MessageBuilder
             $actions[] = $builder->buildImagemapAction();
         }
 
-        $this->message[] = [
+        $quickReplysActions = array();
+        if (!empty($this->quickReplys)) {
+            foreach ($this->quickReplys as $key => $action) {
+                $actions[] = [
+                    'type' => 'action',
+                    'imageUrl' => $action["icon"],
+                    'action' => $action["action"]->buildTemplateAction()
+                ];
+            }
+        }
+
+        $this->message = [
             'type' => MessageType::IMAGEMAP,
             'baseUrl' => $this->baseUrl,
             'altText' => $this->altText,
             'baseSize' => $this->baseSizeBuilder->build(),
             'actions' => $actions,
         ];
+        if (!empty($actions)) {
+            $this->message['quickReply']['items'] = $quickReplysActions;
+        }
 
-        return $this->message;
+        return [$this->message];
     }
 }

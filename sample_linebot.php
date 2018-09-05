@@ -23,11 +23,12 @@ try {
 
 		// オウム返し
 		if ($text !== false) {
+			$actions = test_quick_action();
 			$bot->add_text_builder($text);
 		}
 
 		if ($messeage_type !== false) {
-			$bot->add_text_builder("メッセージタイプ:" . $messeage_type);
+			// $bot->add_text_builder("メッセージタイプ:" . $messeage_type);
 		}
 
 		// 画像取得
@@ -70,7 +71,8 @@ try {
 
 		// 画像メッセージの追加
 		if ($text == "イメージ") {
-			$bot->add_image_builder($photo_url,$photo_url);
+			$actions = test_quick_action();
+			$bot->add_image_builder($photo_url,$photo_url,$actions);
 		}
 
 		// 位置情報メッセージの追加
@@ -85,7 +87,8 @@ try {
 
 		// スタンプメッセージの追加
 		if ($text == "スタンプ") {
-			$bot->add_stamp_builder(141,2);
+			$actions = test_quick_action();
+			$bot->add_stamp_builder(141,2,$actions);
 		}
 
 		// 動画メッセージの追加
@@ -107,7 +110,8 @@ try {
 			$action_button[] = $bot->create_url_action_builder("TypeUrl","https://developers.line.me/ja/reference/messaging-api/");
 			$action_button[] = $bot->create_date_action_builder("TypeDate","date_text","datetime");
 			$default_action = $bot->create_text_action_builder("","デフォルトアクション");
-			$result = $bot->add_button_template_builder("代替テキスト","アクションボタンのテストもかねて",$action_button,"テンプレートボタンテスト",$photo_url,$default_action);
+			$quick_reply_actions = test_quick_action();
+			$result = $bot->add_button_template_builder("代替テキスト","アクションボタンのテストもかねて",$action_button,"テンプレートボタンテスト",$photo_url,$default_action,$quick_reply_actions);
 		}
 
 		// 確認テンプレート
@@ -117,7 +121,8 @@ try {
 			// アクションの作成
 			$action_button[] = $bot->create_text_action_builder("Yes","はい");
 			$action_button[] = $bot->create_text_action_builder("No","いいえ");
-			$result = $bot->add_confirm_template_builder("代替テキスト","確認テンプレートのサンプル",$action_button);
+			$quick_reply_actions = test_quick_action();
+			$result = $bot->add_confirm_template_builder("代替テキスト","確認テンプレートのサンプル",$action_button,$quick_reply_actions);
 		}
 
 		// カルーセルテンプレート
@@ -144,8 +149,9 @@ try {
 					$column_builders[] = $result;
 				}
 			}
+			$quick_reply_actions = test_quick_action();
 			// カルーセルテンプレートビルダーの追加
-			$bot->add_carousel_template_builder("代替テキスト",$column_builders);
+			$bot->add_carousel_template_builder("代替テキスト",$column_builders,$quick_reply_actions);
 		}
 
 		// イメージカルーセルテンプレート
@@ -158,8 +164,9 @@ try {
 				// イメージカラムビルダーを作成
 				$image_column_builders[] = $bot->create_image_column_template_builder($photo_url,$action_builder);
 			}
+			$quick_reply_actions = test_quick_action();
 			// イメージカルーセルテンプレートの追加
-			$bot->add_image_carousel_template_builder("代替テキスト",$image_column_builders);
+			$bot->add_image_carousel_template_builder("代替テキスト",$image_column_builders,$quick_reply_actions);
 		}
 
 		// イメージマップ
@@ -212,8 +219,9 @@ try {
 			// バブルコンテナを作成追加
 			$flex_bubble[] = $bot->create_bubble_container($bubble_blocks);
 
+			$quick_reply_actions = test_quick_action();
 			// flexメッセージを追加
-			$bot->add_flex_builder("sample_flex",$flex_bubble);
+			$bot->add_flex_builder("sample_flex",$flex_bubble,$quick_reply_actions);
 		}
 
 		if ($text == "flex2") {
@@ -538,5 +546,17 @@ function create_sample_flex4(){
 
 	// バブルコンテナを作成追加
 	return $bot->create_bubble_container($bubble_blocks);
+}
+
+function test_quick_action(){
+	global $bot;
+	$actions = array();
+	$actions[] = $bot->create_quick_text_action("test","test_text");
+	$actions[] = $bot->create_quick_post_action("TypePost","post_text");
+	$actions[] = $bot->create_quick_date_action("TypeDate","date_text","datetime");
+	$actions[] = $bot->create_quick_camera_action("camera");
+	$actions[] = $bot->create_quick_camera_roll_action("camera_roll");
+	$actions[] = $bot->create_quick_location_action("location");
+	return $actions;
 }
 ?>

@@ -31,6 +31,8 @@ class TextMessageBuilder implements MessageBuilder
     /** @var string[] */
     private $texts;
     /** @var array */
+    private $quickReplys;
+    /** @var array */
     private $message = [];
 
     /**
@@ -47,7 +49,7 @@ class TextMessageBuilder implements MessageBuilder
      * @param string $text
      * @param string[]|null $extraTexts
      */
-    public function __construct($text, $extraTexts = null)
+    public function __construct($text, $extraTexts = null,$quickReplys=array())
     {
         $extra = [];
         if (!is_null($extraTexts)) {
@@ -55,6 +57,7 @@ class TextMessageBuilder implements MessageBuilder
             $extra = array_slice($args, 1);
         }
         $this->texts = array_merge([$text], $extra);
+        $this->quickReplys = $quickReplys;
     }
 
     /**
@@ -68,12 +71,29 @@ class TextMessageBuilder implements MessageBuilder
             return $this->message;
         }
 
+        $actions = array();
+        if (!empty($this->quickReplys)) {
+            foreach ($this->quickReplys as $key => $action) {
+                $actions[] = [
+                    'type' => 'action',
+                    'imageUrl' => $action["icon"],
+                    'action' => $action["action"]->buildTemplateAction()
+                ];
+            }
+        }
+
+        $messages = array();
         foreach ($this->texts as $text) {
-            $this->message[] = [
+            $message = [
                 'type' => MessageType::TEXT,
                 'text' => $text,
             ];
+            if (!empty($actions)) {
+                $message['quickReply']['items'] = $actions;
+            }
+            $messages[] = $message;
         }
+        $this->message = $messages;
 
         return $this->message;
     }

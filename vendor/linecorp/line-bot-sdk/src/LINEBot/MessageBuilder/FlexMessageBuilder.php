@@ -16,16 +16,19 @@ class FlexMessageBuilder implements MessageBuilder
     private $altText;
     /** @var TemplateBuilder */
     private $contentsBuilder;
+    /** @var array */
+    private $quickReplys;
 
     /**
      * TemplateMessageBuilder constructor.
      * @param string $altText
      * @param TemplateBuilder $contentsBuilder
      */
-    public function __construct($altText, $contentsBuilder)
+    public function __construct($altText, $contentsBuilder,$quickReplys=array())
     {
         $this->altText = $altText;
         $this->contentsBuilder = $contentsBuilder;
+        $this->quickReplys = $quickReplys;
     }
 
     /**
@@ -35,12 +38,24 @@ class FlexMessageBuilder implements MessageBuilder
      */
     public function buildMessage()
     {
-        return [
-            [
-                'type' => MessageType::FLEX,
-                'altText' => $this->altText,
-                'contents' => $this->contentsBuilder->buildTemplate(),
-            ]
+        $actions = array();
+        if (!empty($this->quickReplys)) {
+            foreach ($this->quickReplys as $key => $action) {
+                $actions[] = [
+                    'type' => 'action',
+                    'imageUrl' => $action["icon"],
+                    'action' => $action["action"]->buildTemplateAction()
+                ];
+            }
+        }
+        $message = [
+            'type' => MessageType::FLEX,
+            'altText' => $this->altText,
+            'contents' => $this->contentsBuilder->buildTemplate(),
         ];
+        if (!empty($actions)) {
+            $message['quickReply']['items'] = $actions;
+        }
+        return [$message];
     }
 }

@@ -23,6 +23,9 @@ use \LINE\LINEBot\TemplateActionBuilder\MessageTemplateActionBuilder;
 use \LINE\LINEBot\TemplateActionBuilder\PostbackTemplateActionBuilder;
 use \LINE\LINEBot\TemplateActionBuilder\UriTemplateActionBuilder;
 use \LINE\LINEBot\TemplateActionBuilder\DatetimePickerTemplateActionBuilder;
+use \LINE\LINEBot\TemplateActionBuilder\CameraTemplateActionBuilder;
+use \LINE\LINEBot\TemplateActionBuilder\CameraRollTemplateActionBuilder;
+use \LINE\LINEBot\TemplateActionBuilder\LocationTemplateActionBuilder;
 use \LINE\LINEBot\MessageBuilder\TemplateMessageBuilder;
 use LINE\LINEBot\MessageBuilder\TemplateBuilder\ButtonTemplateBuilder;
 use LINE\LINEBot\MessageBuilder\TemplateBuilder\CarouselColumnTemplateBuilder;
@@ -49,7 +52,6 @@ use LINE\LINEBot\MessageBuilder\FlexBuilder\ImageBuilder;
 */
 class LineBotClass extends LINEBot
 {
-	
 	private $bot;
 	private $reply_token;
 	private $events;
@@ -190,6 +192,60 @@ class LineBotClass extends LINEBot
 	}
 
 	/**
+	 * テキストのメッセージタイプか判定
+	 * @return boolean テキストならtrue それ以外ならfalse
+	 */
+	public function is_text_message_type()
+	{
+		return $this->get_message_type() === "text";
+	}
+
+	/**
+	 * 画像のメッセージタイプか判定
+	 * @return boolean 画像ならtrue それ以外ならfalse
+	 */
+	public function is_image_message_type()
+	{
+		return $this->get_message_type() === "image";
+	}
+
+	/**
+	 * 動画のメッセージタイプか判定
+	 * @return boolean 動画ならtrue それ以外ならfalse
+	 */
+	public function is_video_message_type()
+	{
+		return $this->get_message_type() === "video";
+	}
+
+	/**
+	 * 音声のメッセージタイプか判定
+	 * @return boolean 音声ならtrue それ以外ならfalse
+	 */
+	public function is_audio_message_type()
+	{
+		return $this->get_message_type() === "audio";
+	}
+
+	/**
+	 * 位置情報のメッセージタイプか判定
+	 * @return boolean 位置情報ならtrue それ以外ならfalse
+	 */
+	public function is_location_message_type()
+	{
+		return $this->get_message_type() === "location";
+	}
+
+	/**
+	 * ファイルのメッセージタイプか判定
+	 * @return boolean ファイルならtrue それ以外ならfalse
+	 */
+	public function is_file_message_type()
+	{
+		return $this->get_message_type() === "file";
+	}
+
+	/**
 	 * メッセージタイプを取得
 	 * @return string メッセージタイプ
 	 *
@@ -197,7 +253,7 @@ class LineBotClass extends LINEBot
 	 * image     画像
 	 * video     動画
 	 * audio     音声
-	 * locaation 位置情報
+	 * location 位置情報
 	 * file      ファイル
 	 */
 	public function get_message_type()
@@ -224,6 +280,60 @@ class LineBotClass extends LINEBot
 			$this->set_error("メッセージイベントではありません");
 			return false;
 		}
+	}
+
+	/**
+	 * メッセージのイベントタイプか判定
+	 * @return boolean メッセージならtrue それ以外ならfalse
+	 */
+	public function is_message_event_type()
+	{
+		return $this->get_event_type() === "message";
+	}
+
+	/**
+	 * 友達追加のイベントタイプか判定
+	 * @return boolean 友達追加ならtrue それ以外ならfalse
+	 */
+	public function is_follow_event_type()
+	{
+		return $this->get_event_type() === "follow";
+	}
+
+	/**
+	 * 友達ブロックのイベントタイプか判定
+	 * @return boolean 友達ブロックならtrue それ以外ならfalse
+	 */
+	public function is_unfollow_event_type()
+	{
+		return $this->get_event_type() === "unfollow";
+	}
+
+	/**
+	 * グループまたはルーム参加のイベントタイプか判定
+	 * @return boolean グループまたはルーム参加ならtrue それ以外ならfalse
+	 */
+	public function is_join_event_type()
+	{
+		return $this->get_event_type() === "join";
+	}
+
+	/**
+	 * グループまたはルームからの退会のイベントタイプか判定
+	 * @return boolean グループまたはルームからの退会ならtrue それ以外ならfalse
+	 */
+	public function is_leave_event_type()
+	{
+		return $this->get_event_type() === "leave";
+	}
+
+	/**
+	 * ポストバックのイベントタイプか判定
+	 * @return boolean ポストバックならtrue それ以外ならfalse
+	 */
+	public function is_postback_event_type()
+	{
+		return $this->get_event_type() === "postback";
 	}
 
 	/**
@@ -349,7 +459,7 @@ class LineBotClass extends LINEBot
 	 * @param  string $text 送信するテキストメッセージ
 	 * @return bool         成功ならtrue 失敗ならfalse
 	 */
-	public function add_text_builder($text)
+	public function add_text_builder($text,$actions=array())
 	{
 		// ビルダーストックの数が既に５つ以上ならエラー
 		if (count($this->builder_stok) >= 5) {
@@ -357,9 +467,21 @@ class LineBotClass extends LINEBot
 			return false;
 		}
 
+		$quick_replys = array();
+		if (!empty($actions)) {
+			foreach ($actions as $key => $value) {
+				if ($this->check_action_class($value["action"])) {
+					$quick_replys[] = $value;
+				}else{
+					$this->set_error("アクションビルダーじゃないものが含まれています");
+					return false;
+				}
+			}
+		}
+
 		// 空チェック
 		if (isset($text) && $text !== "") {
-			$this->builder_stok[] = new TextMessageBuilder($text);
+			$this->builder_stok[] = new TextMessageBuilder($text,null,$quick_replys);
 			return true;
 		}else{
 			$this->set_error("テキストは必須です");
@@ -385,7 +507,7 @@ class LineBotClass extends LINEBot
 	 * 最大画像サイズ：240×240
 	 * 最大ファイルサイズ：1MB
 	 */
-	public function add_image_builder($original_image_url,$preview_image_url)
+	public function add_image_builder($original_image_url,$preview_image_url,$actions=array())
 	{
 		// ビルダーストックの数が既に５つ以上ならエラー
 		if (count($this->builder_stok) >= 5) {
@@ -393,9 +515,21 @@ class LineBotClass extends LINEBot
 			return false;
 		}
 
+		$quick_replys = array();
+		if (!empty($actions)) {
+			foreach ($actions as $key => $value) {
+				if ($this->check_action_class($value["action"])) {
+					$quick_replys[] = $value;
+				}else{
+					$this->set_error("アクションビルダーじゃないものが含まれています");
+					return false;
+				}
+			}
+		}
+
 		// 空チェック
 		if (!empty($original_image_url) && !empty($preview_image_url)) {
-			$this->builder_stok[] = new ImageMessageBuilder($original_image_url, $preview_image_url);
+			$this->builder_stok[] = new ImageMessageBuilder($original_image_url, $preview_image_url,$quick_replys);
 			return true;
 		}else{
 			$this->set_error("画像urlとサムネイル画像urlは必須です");
@@ -411,7 +545,7 @@ class LineBotClass extends LINEBot
 	 * @param  double $lon     経度(十進数)
 	 * @return bool           成功ならtrue 失敗ならfalse
 	 */
-	public function add_location_builder($title,$address,$lat,$lon)
+	public function add_location_builder($title,$address,$lat,$lon,$actions=array())
 	{
 		// ビルダーストックの数が既に５つ以上ならエラー
 		if (count($this->builder_stok) >= 5) {
@@ -419,9 +553,22 @@ class LineBotClass extends LINEBot
 			return false;
 		}
 
+		// クイックリプライのアクション
+		$quick_replys = array();
+		if (!empty($actions)) {
+			foreach ($actions as $key => $value) {
+				if ($this->check_action_class($value["action"])) {
+					$quick_replys[] = $value;
+				}else{
+					$this->set_error("アクションビルダーじゃないものが含まれています");
+					return false;
+				}
+			}
+		}
+
 		// 空チェック
 		if (!empty($title) && !empty($address)) {
-			$this->builder_stok[] = new LocationMessageBuilder($title, $address, $lat, $lon);
+			$this->builder_stok[] = new LocationMessageBuilder($title, $address, $lat, $lon,$quick_replys);
 			return true;
 		}else{
 			$this->set_error("タイトルと住所は必須です");
@@ -437,7 +584,7 @@ class LineBotClass extends LINEBot
 	 *
 	 * ステッカーidとパッケージidはLINEBot公式リファレンス参照
 	 */
-	public function add_stamp_builder($sticker_id,$package_id)
+	public function add_stamp_builder($sticker_id,$package_id,$actions=array())
 	{
 		// ビルダーストックの数が既に５つ以上ならエラー
 		if (count($this->builder_stok) >= 5) {
@@ -445,9 +592,22 @@ class LineBotClass extends LINEBot
 			return false;
 		}
 
+		// クイックリプライのアクション
+		$quick_replys = array();
+		if (!empty($actions)) {
+			foreach ($actions as $key => $value) {
+				if ($this->check_action_class($value["action"])) {
+					$quick_replys[] = $value;
+				}else{
+					$this->set_error("アクションビルダーじゃないものが含まれています");
+					return false;
+				}
+			}
+		}
+
 		// 空チェック
 		if (!empty($package_id) && !empty($sticker_id)) {
-			$this->builder_stok[] = new StickerMessageBuilder($package_id, $sticker_id);
+			$this->builder_stok[] = new StickerMessageBuilder($package_id, $sticker_id,$quick_replys);
 			return true;
 		}else{
 			$this->set_error("ステッカーidとパッケージidは必須です");
@@ -473,7 +633,7 @@ class LineBotClass extends LINEBot
 	 * 最大画像サイズ：240×240
 	 * 最大ファイルサイズ：1MB
 	 */
-	public function add_vido_builder($original_content_url,$preview_image_url)
+	public function add_vido_builder($original_content_url,$preview_image_url,$actions=array())
 	{
 		// ビルダーストックの数が既に５つ以上ならエラー
 		if (count($this->builder_stok) >= 5) {
@@ -481,9 +641,22 @@ class LineBotClass extends LINEBot
 			return false;
 		}
 
+		// クイックリプライのアクション
+		$quick_replys = array();
+		if (!empty($actions)) {
+			foreach ($actions as $key => $value) {
+				if ($this->check_action_class($value["action"])) {
+					$quick_replys[] = $value;
+				}else{
+					$this->set_error("アクションビルダーじゃないものが含まれています");
+					return false;
+				}
+			}
+		}
+
 		// 空チェック
 		if (!empty($original_content_url) && !empty($preview_image_url)) {
-			$this->builder_stok[] = new VideoMessageBuilder($original_content_url, $preview_image_url);
+			$this->builder_stok[] = new VideoMessageBuilder($original_content_url, $preview_image_url,$quick_replys);
 			return true;
 		}else{
 			$this->set_error("動画urlと画像urlは必須です");
@@ -505,7 +678,7 @@ class LineBotClass extends LINEBot
 	 * 最大ファイルサイズ：10MB
 	 * 拡張子:m4a
 	 */
-	public function add_audeo_builder($original_content_url,$audio_length)
+	public function add_audeo_builder($original_content_url,$audio_length,$actions=array())
 	{
 		// ビルダーストックの数が既に５つ以上ならエラー
 		if (count($this->builder_stok) >= 5) {
@@ -513,9 +686,22 @@ class LineBotClass extends LINEBot
 			return false;
 		}
 
+		// クイックリプライのアクション
+		$quick_replys = array();
+		if (!empty($actions)) {
+			foreach ($actions as $key => $value) {
+				if ($this->check_action_class($value["action"])) {
+					$quick_replys[] = $value;
+				}else{
+					$this->set_error("アクションビルダーじゃないものが含まれています");
+					return false;
+				}
+			}
+		}
+
 		// 空チェック
 		if (!empty($original_content_url) && !empty($audio_length)) {
-			$this->builder_stok[] = new AudioMessageBuilder($original_content_url, $audio_length);
+			$this->builder_stok[] = new AudioMessageBuilder($original_content_url, $audio_length,$quick_replys);
 			return true;
 		}else{
 			$this->set_error("音声ファイルurlと音声ファイルの長さは必須です");
@@ -533,7 +719,7 @@ class LineBotClass extends LINEBot
 	 * @param  class  $default_action_builder デフォルトアクション(create_action_builder()のアクションビルダー)
 	 * @return bool                           成功ならtrue 失敗ならfalse
 	 */
-	public function add_button_template_builder($alternative_text,$text,$action_buttons,$title="",$image_url="",$default_action_builder="")
+	public function add_button_template_builder($alternative_text,$text,$action_buttons,$title="",$image_url="",$default_action_builder="",$quick_reply_actions=array())
 	{
 		// ビルダーストックの数が既に５つ以上ならエラー
 		if (count($this->builder_stok) >= 5) {
@@ -581,9 +767,22 @@ class LineBotClass extends LINEBot
 			$this->set_error("アクションビルダーではありません");
 			return false;
 		}
-		
+
+		// クイックリプライのアクション
+		$quick_replys = array();
+		if (!empty($quick_reply_actions)) {
+			foreach ($quick_reply_actions as $key => $value) {
+				if ($this->check_action_class($value["action"])) {
+					$quick_replys[] = $value;
+				}else{
+					$this->set_error("アクションビルダーじゃないものが含まれています");
+					return false;
+				}
+			}
+		}
+
 		// ビルダーを追加
-		$this->builder_stok[] = new TemplateMessageBuilder($alternative_text,new ButtonTemplateBuilder($title, $text, $image_url, $action_button_array,$default_action_builder));
+		$this->builder_stok[] = new TemplateMessageBuilder($alternative_text,new ButtonTemplateBuilder($title, $text, $image_url, $action_button_array,$default_action_builder),$quick_replys);
 		return true;
 	}
 
@@ -594,7 +793,7 @@ class LineBotClass extends LINEBot
 	 * @param  array  $action_buttons   アクションボタン (create_action_builder()のアクションビルダーの配列 ２つ)
 	 * @return bool                     成功ならtrue 失敗ならfalse
 	 */
-	public function add_confirm_template_builder($alternative_text,$text,$action_buttons)
+	public function add_confirm_template_builder($alternative_text,$text,$action_buttons,$quick_reply_actions=array())
 	{
 		// ビルダーストックの数が既に５つ以上ならエラー
 		if (count($this->builder_stok) >= 5) {
@@ -630,8 +829,21 @@ class LineBotClass extends LINEBot
 			return false;
 		}
 
+		// クイックリプライのアクション
+		$quick_replys = array();
+		if (!empty($quick_reply_actions)) {
+			foreach ($quick_reply_actions as $key => $value) {
+				if ($this->check_action_class($value["action"])) {
+					$quick_replys[] = $value;
+				}else{
+					$this->set_error("アクションビルダーじゃないものが含まれています");
+					return false;
+				}
+			}
+		}
+
 		// ビルダーを追加
-		$this->builder_stok[] = new TemplateMessageBuilder($alternative_text,new ConfirmTemplateBuilder($text, $action_button_array));
+		$this->builder_stok[] = new TemplateMessageBuilder($alternative_text,new ConfirmTemplateBuilder($text, $action_button_array),$quick_replys);
 		return true;
 	}
 
@@ -689,7 +901,7 @@ class LineBotClass extends LINEBot
 	 * @param string $alternative_text         代替テキスト
 	 * @param array  $column_template_builders カラムビルダー (create_carousel_column_template_builder()の配列 1~10つまで)
 	 */
-	public function add_carousel_template_builder($alternative_text,$column_template_builders)
+	public function add_carousel_template_builder($alternative_text,$column_template_builders,$quick_reply_actions=array())
 	{
 		// ビルダーストックの数が既に５つ以上ならエラー
 		if (count($this->builder_stok) >= 5) {
@@ -725,8 +937,21 @@ class LineBotClass extends LINEBot
 			return false;
 		}
 
+		// クイックリプライのアクション
+		$quick_replys = array();
+		if (!empty($quick_reply_actions)) {
+			foreach ($quick_reply_actions as $key => $value) {
+				if ($this->check_action_class($value["action"])) {
+					$quick_replys[] = $value;
+				}else{
+					$this->set_error("アクションビルダーじゃないものが含まれています");
+					return false;
+				}
+			}
+		}
+
 		// ビルダーを追加
-		$this->builder_stok[] = new TemplateMessageBuilder($alternative_text,new CarouselTemplateBuilder($column_template_builder_array));
+		$this->builder_stok[] = new TemplateMessageBuilder($alternative_text,new CarouselTemplateBuilder($column_template_builder_array),$quick_replys);
 		return true;
 	}
 
@@ -765,7 +990,7 @@ class LineBotClass extends LINEBot
 	 * @param string $alternative_text      代替テキスト
 	 * @param array  $image_column_builders カラムビルダー (create_image_column_template_builder()の配列 1~10個まで)
 	 */
-	public function add_image_carousel_template_builder($alternative_text,$image_column_builders)
+	public function add_image_carousel_template_builder($alternative_text,$image_column_builders,$quick_reply_actions=array())
 	{
 		// ビルダーストックの数が既に５つ以上ならエラー
 		if (count($this->builder_stok) >= 5) {
@@ -802,8 +1027,22 @@ class LineBotClass extends LINEBot
 			$this->set_error("イメージカラムは10個までです");
 			return false;
 		}
+
+		// クイックリプライのアクション
+		$quick_replys = array();
+		if (!empty($quick_reply_actions)) {
+			foreach ($quick_reply_actions as $key => $value) {
+				if ($this->check_action_class($value["action"])) {
+					$quick_replys[] = $value;
+				}else{
+					$this->set_error("アクションビルダーじゃないものが含まれています");
+					return false;
+				}
+			}
+		}
+
 		// ビルダーを追加
-		$this->builder_stok[] = new TemplateMessageBuilder($alternative_text,new ImageCarouselTemplateBuilder($image_column_builder_array));
+		$this->builder_stok[] = new TemplateMessageBuilder($alternative_text,new ImageCarouselTemplateBuilder($image_column_builder_array),$quick_replys);
 		return true;
 	}
 
@@ -851,7 +1090,7 @@ class LineBotClass extends LINEBot
 	 * @param int    $width                画像の高さ
 	 * @param array  $action_area_builders アクションエリアビルダー (create_imagemap_action_area_builder()の配列 50個まで)
 	 */
-	public function add_imagemap_buildr($alternative_text,$image_base_url,int $width,$action_area_builders)
+	public function add_imagemap_buildr($alternative_text,$image_base_url,int $width,$action_area_builders,$quick_reply_actions=array())
 	{
 		// ビルダーストックの数が既に５つ以上ならエラー
 		if (count($this->builder_stok) >= 5) {
@@ -882,11 +1121,24 @@ class LineBotClass extends LINEBot
 			}
 		}
 
+		// クイックリプライのアクション
+		$quick_replys = array();
+		if (!empty($quick_reply_actions)) {
+			foreach ($quick_reply_actions as $key => $value) {
+				if ($this->check_action_class($value["action"])) {
+					$quick_replys[] = $value;
+				}else{
+					$this->set_error("アクションビルダーじゃないものが含まれています");
+					return false;
+				}
+			}
+		}
+
 		// ベースサイズビルダーを作成
 		$base_size_builder = new BaseSizeBuilder(1040,$width);
 
 		// ビルダーを追加
-		$this->builder_stok[] = new ImagemapMessageBuilder($image_base_url,$alternative_text,$base_size_builder,$action_area_builder_array);
+		$this->builder_stok[] = new ImagemapMessageBuilder($image_base_url,$alternative_text,$base_size_builder,$action_area_builder_array,$quick_replys);
 		return true;
 	}
 
@@ -1158,15 +1410,28 @@ class LineBotClass extends LINEBot
 	 * @param [type] $altText 代替テキスト 最大文字数：400
 	 * @param [type] $bubbles Flex Messageのコンテナオブジェクト
 	 */
-	public function add_flex_builder($altText,$bubbles)
+	public function add_flex_builder($altText,$bubbles,$quick_reply_actions=array())
 	{
 		$bubbles_array = array();
 		foreach ((array)$bubbles as $key => $value) {
 			$bubbles_array[] = $value;
 		}
 
+		// クイックリプライのアクション
+		$quick_replys = array();
+		if (!empty($quick_reply_actions)) {
+			foreach ($quick_reply_actions as $key => $value) {
+				if ($this->check_action_class($value["action"])) {
+					$quick_replys[] = $value;
+				}else{
+					$this->set_error("アクションビルダーじゃないものが含まれています");
+					return false;
+				}
+			}
+		}
+
 		// ビルダーを追加
-		$this->builder_stok[] = new FlexMessageBuilder($altText,new ContentsBuilder($bubbles_array));
+		$this->builder_stok[] = new FlexMessageBuilder($altText,new ContentsBuilder($bubbles_array),$quick_replys);
 	}
 
 	/**
@@ -1266,6 +1531,133 @@ class LineBotClass extends LINEBot
 		$limit_min = !empty($options['limit_min']) ? $limit_min : null;
 
 		return $this->create_action_builder("date",$label,["post"=>$post],"datetime",$initial,$limit_max,$limit_min);
+	}
+
+	/**
+	 * クイックリプライのテキストアクションを作成
+	 * @param  string $label ラベル
+	 * @param  string $text  テキスト
+	 * @return class         テキストアクション
+	 */
+	public function create_quick_text_action($label,$text,$icon_url="")
+	{
+		// 空チェック
+		if (empty($text)) {
+			$this->set_error("テキストは必須です");
+			return false;
+		}
+		// ラベルが空なら
+		if (empty($label)) {
+			$this->set_error("ラベルは必須です");
+			return false;
+		}
+		// テキストアクションを返す
+		return ["action" => $this->create_action_builder("text",$label,["text"=>$text]),"icon" => $icon_url];
+	}
+
+	/**
+	 * クイックリプライのpostアクションを作成
+	 * @param  string $label ラベル
+	 * @param  string $post  postする値
+	 * @param  string $text  アクションしたときに表示するテキスト
+	 * @return class         postアクション
+	 */
+	public function create_quick_post_action($label,$post,$text=null,$icon_url="")
+	{
+		// 空チェック
+		if (empty($post)) {
+			$this->set_error("postは必須です");
+			return false;
+		}
+		// ラベルが空なら
+		if (empty($label)) {
+			$this->set_error("ラベルは必須です");
+			return false;
+		}
+		return ["action" => $this->create_action_builder("post",$label,["post"=>$post,"text"=>$text]),"icon" => $icon_url];
+	}
+
+	/**
+	 * クイックリプライのdateアクションを作成
+	 * @param  string $label     ラベル
+	 * @param  string $post      postするあたい
+	 * @param  string $date_mode dateのタイプ date time datetime
+	 * @param  array  $options   オプションの連想配列
+	 * @return [type]            dateアクション
+	 */
+	public function create_quick_date_action($label,$post,$date_mode,$icon_url="",$options=array())
+	{
+		// 空チェック
+		if (empty($post)) {
+			$this->set_error("postは必須です");
+			return false;
+		}
+		if (empty($date_mode)) {
+			$this->set_error("date_modeは必須です");
+			return false;
+		}
+		// ラベルが空なら
+		if (empty($label)) {
+			$this->set_error("ラベルは必須です");
+			return false;
+		}
+		// オプションのチェック
+		$initial   = !empty($options['initial'])   ? $initial : null;
+		$limit_max = !empty($options['limit_max']) ? $limit_max : null;
+		$limit_min = !empty($options['limit_min']) ? $limit_min : null;
+
+		return ["action" => $this->create_action_builder("date",$label,["post"=>$post],"datetime",$initial,$limit_max,$limit_min),"icon" => $icon_url];
+	}
+
+	/**
+	 * クイックリプライのカメラアクションを作成
+	 * @param  string $label ラベル
+	 * @param  string $text  テキスト
+	 * @return class         テキストアクション
+	 */
+	public function create_quick_camera_action($label,$icon_url="")
+	{
+		// ラベルが空なら
+		if (empty($label)) {
+			$this->set_error("ラベルは必須です");
+			return false;
+		}
+		// テキストアクションを返す
+		return ["action" => new CameraTemplateActionBuilder($label),"icon" => $icon_url];
+	}
+
+	/**
+	 * クイックリプライのカメラロールアクションを作成
+	 * @param  string $label ラベル
+	 * @param  string $text  テキスト
+	 * @return class         テキストアクション
+	 */
+	public function create_quick_camera_roll_action($label,$icon_url="")
+	{
+		// ラベルが空なら
+		if (empty($label)) {
+			$this->set_error("ラベルは必須です");
+			return false;
+		}
+		// テキストアクションを返す
+		return ["action" => new CameraRollTemplateActionBuilder($label),"icon" => $icon_url];
+	}
+
+	/**
+	 * クイックリプライの位置情報アクションを作成
+	 * @param  string $label ラベル
+	 * @param  string $text  テキスト
+	 * @return class         テキストアクション
+	 */
+	public function create_quick_location_action($label,$icon_url="")
+	{
+		// ラベルが空なら
+		if (empty($label)) {
+			$this->set_error("ラベルは必須です");
+			return false;
+		}
+		// テキストアクションを返す
+		return ["action" => new LocationTemplateActionBuilder($label),"icon" => $icon_url];
 	}
 
 	/**
@@ -1506,6 +1898,18 @@ class LineBotClass extends LINEBot
 		}
 		// urlactionのclass
 		if ($action_class instanceof DatetimePickerTemplateActionBuilder) {
+			return true;
+		}
+		// cameraactionのclass
+		if ($action_class instanceof CameraTemplateActionBuilder) {
+			return true;
+		}
+		// camera_rollactionのclass
+		if ($action_class instanceof CameraRollTemplateActionBuilder) {
+			return true;
+		}
+		// locationactionのclass
+		if ($action_class instanceof LocationTemplateActionBuilder) {
 			return true;
 		}
 		// どれにも当てはまらないならfalse

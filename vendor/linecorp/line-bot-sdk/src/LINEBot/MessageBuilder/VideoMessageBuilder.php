@@ -32,6 +32,8 @@ class VideoMessageBuilder implements MessageBuilder
     private $originalContentUrl;
     /** @var string */
     private $previewImageUrl;
+    /** @var array */
+    private $quickReplys;
 
     /**
      * VideoMessageBuilder constructor.
@@ -39,10 +41,11 @@ class VideoMessageBuilder implements MessageBuilder
      * @param string $originalContentUrl
      * @param string $previewImageUrl
      */
-    public function __construct($originalContentUrl, $previewImageUrl)
+    public function __construct($originalContentUrl, $previewImageUrl,$quickReplys=array())
     {
         $this->originalContentUrl = $originalContentUrl;
         $this->previewImageUrl = $previewImageUrl;
+        $this->quickReplys = $quickReplys;
     }
 
     /**
@@ -52,12 +55,26 @@ class VideoMessageBuilder implements MessageBuilder
      */
     public function buildMessage()
     {
-        return [
+        $actions = array();
+        if (!empty($this->quickReplys)) {
+            foreach ($this->quickReplys as $key => $action) {
+                $actions[] = [
+                    'type' => 'action',
+                    'imageUrl' => $action["icon"],
+                    'action' => $action["action"]->buildTemplateAction()
+                ];
+            }
+        }
+        $message = [
             [
                 'type' => MessageType::VIDEO,
                 'originalContentUrl' => $this->originalContentUrl,
                 'previewImageUrl' => $this->previewImageUrl,
             ]
         ];
+        if (!empty($actions)) {
+            $message['quickReply']['items'] = $actions;
+        }
+        return [$message];
     }
 }
